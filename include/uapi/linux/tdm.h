@@ -1,0 +1,41 @@
+/* SPDX-License-Identifier: ((GPL-2.0 WITH Linux-syscall-note) OR BSD-3-Clause) */
+/* Do not edit directly, auto-generated from: */
+/*	Documentation/netlink/specs/tdm.yaml */
+/* YNL-GEN uapi header */
+
+#ifndef _UAPI_LINUX_TDM_H
+#define _UAPI_LINUX_TDM_H
+
+#define TDM_FAMILY_NAME		"tdm"
+#define TDM_FAMILY_VERSION	1
+
+#define TDM_GET_MEASUREMENT_COUNT	0
+#define TDM_GET_ALL_MEASUREMENTS	255
+
+enum tdm_measurement_attributes {
+	TDM_MEASUREMENT_ATTRIBUTES_SIGNATURE = 1,
+	TDM_MEASUREMENT_ATTRIBUTES_RAW = 2,
+	TDM_MEASUREMENT_ATTRIBUTES_NEW = 4,
+};
+
+enum {
+	TDM_A_MEASUREMENT_OPERATION = 1,
+	TDM_A_MEASUREMENT_ATTRIBUTES,
+	TDM_A_MEASUREMENT_DEVICE,
+	TDM_A_MEASUREMENT_REQUEST,
+	TDM_A_MEASUREMENT_RESPONSE,
+	TDM_A_MEASUREMENT_VCA,
+
+	__TDM_A_MEASUREMENT_MAX,
+	TDM_A_MEASUREMENT_MAX = (__TDM_A_MEASUREMENT_MAX - 1)
+};
+
+enum {
+	TDM_CMD_GET_MEASUREMENT = 1,
+	TDM_CMD_GET_VCA,
+
+	__TDM_CMD_MAX,
+	TDM_CMD_MAX = (__TDM_CMD_MAX - 1)
+};
+
+#endif /* _UAPI_LINUX_TDM_H */

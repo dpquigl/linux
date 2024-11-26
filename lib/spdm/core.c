@@ -196,6 +196,7 @@ int spdm_alloc_transcript(struct spdm_state *spdm_state)
 void spdm_free_transcript(struct spdm_state *spdm_state)
 {
 	kvfree(spdm_state->transcript);
+	spdm_state->transcript = NULL;
 	spdm_state->transcript_end = NULL;
 	spdm_state->transcript_max = 0;
 }

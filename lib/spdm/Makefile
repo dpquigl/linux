@@ -7,5 +7,5 @@
 
 obj-$(CONFIG_SPDM) += spdm.o
 
-spdm-y := core.o req-authenticate.o
+spdm-y := core.o req-authenticate.o req-measurements.o
 spdm-$(CONFIG_SYSFS) += req-sysfs.o

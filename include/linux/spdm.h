@@ -18,7 +18,7 @@ struct key;
 struct device;
 struct spdm_state;
 struct x509_certificate;
-
+struct spdm_get_measurements_rsp;
 typedef ssize_t (spdm_transport)(void *priv, struct device *dev,
 				 const void *request, size_t request_sz,
 				 void *response, size_t response_sz);
@@ -35,6 +35,9 @@ int spdm_authenticate(struct spdm_state *spdm_state);
 void spdm_await(struct spdm_state *spdm_state);
 
 void spdm_destroy(struct spdm_state *spdm_state);
+
+int spdm_get_measurements(struct spdm_state *spdm_state, struct spdm_get_measurements_rsp **response,
+			  u8 slot, u8 index, bool sign, bool fresh);
 
 #ifdef CONFIG_SYSFS
 extern const struct attribute_group spdm_attr_group;

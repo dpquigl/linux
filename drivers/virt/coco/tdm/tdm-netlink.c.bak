@@ -1,0 +1,133 @@
+#include <linux/printk.h>
+#include <net/netlink.h>
+#include <net/genetlink.h>
+#include "tdm.h"
+
+static uint32_t tdm_seqnum; /* Needed to match requests with replys */
+
+/* 
+ * Netlink Operations represend commands coming in from userspace to be handled 
+ * Because Operations are to handle message coming from userpace to the kernel
+ * the number of operations is not equal to the number of commands defined for
+ * the netlink family. This is the case because UNSPEC is never handled and
+ * also the command list may include commands originating from the kernel and
+ * heading to userspace 
+ **/
+#define TDM_GENL_NUM_OPS 2
+
+static int tdm_genl_handle_attest_result(struct sk_buff *sender_skb, struct genl_info *info){
+	pr_info("Received a Attest Result Message\n");
+	return 0;
+}
+
+static int tdm_genl_handle_test_attest(struct sk_buff *sender_skb, struct genl_info *info) {
+	
+	struct nlattr *dev_attr = NULL;
+	char *dev_id = NULL;
+	
+	pr_info("Received a Test Attest Message\n");
+	
+	dev_attr = info->attrs[TDM_GENL_ATTR_DEVICE];
+	if (!dev_attr) {
+		pr_err("Received a test attest message without a devid\n");
+		return -EINVAL;
+	}
+
+	dev_id = (char*)nla_data(dev_attr);
+
+	
+	return tdm_send_attest(dev_id);
+}
+
+struct genl_ops tdm_ops[TDM_GENL_NUM_OPS] = {
+	{
+		.cmd = TDM_GENL_CMD_ATTEST_RESULT,
+		.doit = tdm_genl_handle_attest_result,
+	},
+	{
+		.cmd = TDM_GENL_CMD_TEST_ATTEST,
+		.doit = tdm_genl_handle_test_attest,
+	},
+};
+
+static const struct genl_multicast_group tdm_mcgrps[] = {
+	{ .name = TDM_GENL_MCAST_GROUP_NAME, },
+};
+
+static struct nla_policy tdm_policy[TDM_GENL_ATTR_LEN] = {
+	[TDM_GENL_ATTR_UNSPEC] = { .type = NLA_UNSPEC},
+	[TDM_GENL_ATTR_DEVICE] = { .type = NLA_NUL_STRING, .len = DEVID_LEN_W_NULL},
+	[TDM_GENL_ATTR_ATTEST_RESULT] = { .type = NLA_STRING },
+	[TDM_GENL_ATTR_ATTEST_SEQNUM] = { .type = NLA_U32 },
+};
+
+static struct genl_family tdm_genl_family __ro_after_init = {
+	.module = THIS_MODULE,
+	.name = TDM_GENL_FAMILY_NAME,
+	.version = TDM_GENL_VERSION,
+	.maxattr = TDM_GENL_ATTR_MAX,
+	.mcgrps = tdm_mcgrps,
+	.n_mcgrps = ARRAY_SIZE(tdm_mcgrps),
+	.ops = tdm_ops,
+	.n_ops = TDM_GENL_NUM_OPS,
+	.policy = tdm_policy,	
+};
+
+int tdm_send_attest(const char* dev_id)
+{
+	struct sk_buff *skb;
+	void *msg_header;
+
+	skb = genlmsg_new(NLMSG_GOODSIZE, GFP_KERNEL);
+	if (!skb)
+		return -ENOMEM;
+
+	msg_header = genlmsg_put(skb, 0, tdm_seqnum++, &tdm_genl_family, 0, TDM_GENL_CMD_ATTEST);
+
+	if (!msg_header)
+		goto out_free;
+
+	if (nla_put_string(skb, TDM_GENL_ATTR_DEVICE, dev_id))
+		goto out_cancel;
+	
+	genlmsg_end(skb, msg_header);
+
+	genlmsg_multicast(&tdm_genl_family, skb, 0, 0, GFP_KERNEL);
+
+	return 0;
+
+out_cancel:
+	genlmsg_cancel(skb, msg_header);
+
+out_free:
+	nlmsg_free(skb);
+	return -EMSGSIZE;
+}
+
+int tdm_genetlink_init(void)
+{
+	int ret = 0;
+
+	ret = genl_register_family(&tdm_genl_family);
+	if (ret) {
+		pr_err("Failed to register " TDM_GENL_FAMILY_NAME "\n");
+	} else {
+		pr_info("Successfully registered " TDM_GENL_FAMILY_NAME "\n");
+	}
+
+	return 0;
+}
+
+void tdm_genetlink_exit(void)
+{
+	int ret = 0;
+
+	ret = genl_unregister_family(&tdm_genl_family);
+	if (ret) {
+		pr_warn("Failed to unregister " TDM_GENL_FAMILY_NAME " netlink family\n");
+	} else {
+		pr_info("Unregistered " TDM_GENL_FAMILY_NAME " netlink family\n");
+	}
+}
+
+MODULE_LICENSE("GPL");

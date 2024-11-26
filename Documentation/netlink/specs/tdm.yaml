@@ -1,0 +1,89 @@
+# SPDX-License-Identifier: ((GPL-2.0 WITH Linux-syscall-note) OR BSD-3-Clause)
+
+name: tdm
+
+protocol: genetlink
+
+doc: Interface for TDM CoCo Interactions.
+
+definitions:
+  -
+    name: get-measurement-count
+    type: const
+    value: 0x0
+  -
+    name: get-all-measurements
+    type: const
+    value: 0xFF
+  -
+    name: measurement-attributes
+    type: flags
+    entries:
+      - signature
+      - raw
+      - new
+
+attribute-sets:
+  -
+    name: measurement
+    attributes:
+    - 
+      name: operation
+      type: u8
+      doc: |
+        Which measurement operation to perform
+        Query number of measurement blocks: 0x0 (get-measurement-count)
+        Get a specificic measurement index: 0x01-0xFE
+        Get all measurements: 0xFF (get-all-measurements)
+    -
+      name: attributes
+      type: u8
+      enum: measurement-attributes
+      enum-as-flags: true
+      doc: |
+        SPDM measurements can be requested with additonal attributes.
+        Signature Requested, Raw Bitstream Requested, New Measurement Requested
+    -
+      name: device
+      type: string
+      doc: |
+        The device identifier in PCI Bus:Device.Function format.
+      #TODO Does this need to handle extended notation for PCI domain?
+    -
+      name: request
+      type: binary
+      doc: The raw bytes sent to the device in the SPDM request.
+    -
+      name: response
+      type: binary
+      doc: |
+        The unaltered SPDM response bytes returned from the device 
+    -
+      name: VCA
+      type: binary
+      doc: The raw bytes representing the VCA for measurement log validation
+
+operations:
+  list:
+  -
+    name: get-measurement
+    doc: Retrieve SPDM measurement for a specified device
+    attribute-set: measurement
+    do:
+      request:
+        attributes:
+          - operation
+          - attributes
+          - device
+      reply:
+        attributes:
+          - request
+          - response
+  -
+    name: get-vca
+    doc: Retrieve the VCA portion of the measurement log
+    attribute-set: measurement
+    do:
+      reply:
+        attributes:
+          - VCA

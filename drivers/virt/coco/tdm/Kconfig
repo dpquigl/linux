@@ -1,0 +1,8 @@
+config TDM_NETLINK_DRIVER
+	tristate "TDM driver"
+	help
+	  The driver provides userspace interface for the TDM to request
+	  the various measurements needed to attest a device.
+
+	  To compile this driver as module, choose M here. The module will
+	  be called tdm.

@@ -426,6 +426,47 @@ struct spdm_challenge_rsp {
 	 */
 } __packed;
 
+/* SPDM measurement Request Attributes (SPDM 1.0.0 table 50) */
+#define SPDM_MEAS_SIGNATURE		BIT(0)		/* 1.0 */
+#define SPDM_MEAS_RAW_BITSTREAM		BIT(1)		/* 1.0 */
+#define SPDM_MEAS_NEW_MEASUREMENT	BIT(2)		/* 1.0 */
+
+/* SPDM measurement reserved indexes (SPDM 1.0.0 table 51) */
+#define SPDM_MEAS_MANIFEST		0xFD		/* 1.0 */
+#define SPDM_MEAS_DEVICE_MODE		0xFE		/* 1.0 */
+
+#define SPDM_GET_MEASUREMENTS 0xE0 /* SPDM 1.3.0 table 49 */
+#define SPDM_MEAS_GET_BLOCK_COUNT 0x00 /* SPDM 1.3.0 table 49 */
+#define SPDM_MEAS_GET_ALL_MEASUREMENTS 0xFF /* SPDM 1.3.0 table 49 */
+struct spdm_get_measurements_req {
+	u8 version;
+	u8 code;
+	u8 param1; /* Request Attributes */
+	u8 param2; /* Measurement Operation */
+	u8 nonce[SPDM_NONCE_SZ];
+	u8 slot_id_param;
+	u8 context[8];
+} __packed;
+
+
+struct spdm_get_measurements_rsp {
+	u8 version;
+	u8 code;
+	u8 param1; /* Optional Block Count */
+	u8 param2; /* [3:0] SlotID, [5:4] Content Change, [7:6] Reserved SPDM 1.3.0 table 52 */
+	u8 number_blocks;
+	u8 measurement_length[3];
+	/*
+	 * Additional fields at end of this structure:
+	 * - MeasurementRecord: Length is MeasurementRecordLength
+	 * - Nonce: 32 bytes long
+	 * - OpaqueDataLength: 2 bytes
+	 * - OpaqueData: Length defined by OpaqueDataLength
+	 * - RequesterContext: 8 bytes
+	 * - Signature: 
+	 */
+
+} __packed;
 #define SPDM_ERROR 0x7f
 
 enum spdm_error_code {
